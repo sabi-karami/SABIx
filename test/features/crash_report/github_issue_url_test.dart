@@ -16,10 +16,10 @@ void main() {
       os: 'Android 16',
     );
     final query = url.queryParameters;
-    expect(url.path, '/hiddify/hiddify-app/issues/new');
+    expect(url.path, '/sabi-karami/SABIx/issues/new');
     expect(query['template'], 'bug_report.yaml');
     expect(query['title'], '[Crash]: panic: runtime error: index out of range [3] with length 3');
-    expect(query['problem'], 'Hiddify crashed: ${crash.headline}');
+    expect(query['problem'], 'SABIx crashed: ${crash.headline}');
     expect(query['logs'], crash.text);
     expect(query['platform'], 'Android');
     expect(query['os'], 'Android 16');

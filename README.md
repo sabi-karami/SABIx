@@ -13,10 +13,11 @@ A beautiful, ad-free, open-source VPN / anti-censorship client for Android.
 - Supports VLESS, VMess, Trojan, Reality, Shadowsocks, Hysteria2, TUIC, WireGuard, SSH and more (powered by sing-box)
 - All subscription formats (sing-box, V2Ray links, Clash / Clash Meta) with auto-update
 - Automatic fastest-server selection
-- **No ads. No analytics. No tracking.**
+- **No ads.** This Android build has no Sentry destination configured. VPN endpoints and optional online features may have their own privacy policies.
 - Dark "deep space" theme with the SABIx violet/aqua palette
 
 ## 📥 Download
+Android releases are built and signed in GitHub Actions; every release links to the exact source revision. The APK is not an official Hiddify release. Runtime connectivity depends on the selected profile and network.
 Get the latest APK from the [Releases page](https://github.com/sabi-karami/SABIx/releases).
 
 ## 🙏 Credits & License

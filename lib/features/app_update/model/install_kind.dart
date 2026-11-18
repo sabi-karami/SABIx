@@ -63,6 +63,7 @@ enum InstallKind {
                 'x86_64' => 'Hiddify-Android-x86_64.apk',
                 _ => 'Hiddify-Android-universal.apk',
               }) ??
+              release.asset('SABIx-Android-universal.apk') ??
               release.asset('Hiddify-Android-universal.apk'),
         windowsSetup => release.asset('Hiddify-Windows-Setup-x64.exe'),
         linuxAppImage => release.asset('Hiddify-Linux-${arm64 ? 'arm64' : 'x64'}.AppImage'),

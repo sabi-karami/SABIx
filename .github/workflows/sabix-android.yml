@@ -1,0 +1,102 @@
+name: SABIx Android
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: sabix-android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main' && github.repository == 'sabi-karami/SABIx'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CHANNEL: prod
+      SENTRY_DSN: ''
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: '17'
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+      - uses: ./.github/actions/setup-flutter
+        with:
+          platform: android-apk
+      - name: Analyze and test
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+          flutter test --reporter expanded
+      - name: Sign and build the universal APK
+        env:
+          SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          : "${SIGNING_KEY:?Missing Android signing key}" "${STORE_PASSWORD:?Missing keystore password}" "${KEY_PASSWORD:?Missing key password}" "${KEY_ALIAS:?Missing key alias}"
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/sabix.p12" android/key.properties' EXIT
+          printf '%s' "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/sabix.p12"
+          printf '%s=%s\n' storeFile "$RUNNER_TEMP/sabix.p12" storePassword "$STORE_PASSWORD" keyPassword "$KEY_PASSWORD" keyAlias "$KEY_ALIAS" > android/key.properties
+          for attempt in 1 2 3; do
+            if flutter build apk --release --no-pub --target lib/main_prod.dart --target-platform android-arm,android-arm64,android-x64 --dart-define="commit=${GITHUB_SHA:0:7}" 2>&1 | tee "$RUNNER_TEMP/sabix-build.log"; then break; fi
+            if [[ "$attempt" == 3 ]] || ! grep -Eq '429|timed out|Connection reset|status code 50[234]' "$RUNNER_TEMP/sabix-build.log"; then exit 1; fi
+            sleep "$((attempt * 45))"
+          done
+          install -D -m 644 build/app/outputs/flutter-apk/app-release.apk out/SABIx-Android-universal.apk
+          apk=out/SABIx-Android-universal.apk
+          tools="$ANDROID_HOME/build-tools/36.0.0"
+          expected=$(keytool -exportcert -storetype PKCS12 -keystore "$RUNNER_TEMP/sabix.p12" -alias "$KEY_ALIAS" -storepass:env STORE_PASSWORD | sha256sum | cut -d' ' -f1)
+          actual=$("$tools/apksigner" verify --print-certs "$apk" | awk '/Signer #1 certificate SHA-256 digest:/ {print $NF}')
+          test -n "$actual" && test "$expected" = "$actual"
+          "$tools/aapt" dump badging "$apk" > "$RUNNER_TEMP/sabix-badging"
+          grep -F "package: name='com.sabix.app'" "$RUNNER_TEMP/sabix-badging"
+          grep -F "application-label:'SABIx'" "$RUNNER_TEMP/sabix-badging"
+          for abi in armeabi-v7a arm64-v8a x86_64; do
+            grep '^native-code:' "$RUNNER_TEMP/sabix-badging" | grep -F "'$abi'"
+          done
+          (cd out && sha256sum SABIx-Android-universal.apk > SHA256SUMS)
+      - uses: actions/upload-artifact@v6
+        with:
+          name: sabix-apk
+          path: out/
+          compression-level: 0
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: sabix-apk
+          path: out
+      - name: Publish signed Android APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          (cd out && sha256sum -c SHA256SUMS)
+          version=$(sed -nE 's/^version: ([0-9]+\.[0-9]+\.[0-9]+)\+[0-9]+$/\1/p' pubspec.yaml)
+          test -n "$version"
+          if gh release view "v$version" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Release exists. Bump the Android version and version code before publishing an update.' >&2
+            exit 1
+          fi
+          core=$(sed -n 's/^core.version=//p' dependencies.properties)
+          printf '%s\n' '## What’s new' 'SABIx Android: new launcher art, night palette and two-tone connection graphics. No ads; Sentry has no destination configured.' '' 'This APK was signed and passed the automated build checks. Connecting depends on your profile and network.' '' "Source: https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA" "Core source: https://github.com/hiddify/hiddify-core/tree/v$core" > "$RUNNER_TEMP/release-notes.md"
+          gh release create "v$version" out/SABIx-Android-universal.apk out/SHA256SUMS --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "SABIx Android v$version" --notes-file "$RUNNER_TEMP/release-notes.md"

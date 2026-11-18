@@ -80,8 +80,8 @@ class EclipseTraffic {
 }
 
 /// The connect button: a white button in front of the sun. Flat in the middle, curving only near
-/// its edge. While connected, the traffic is the sun's light round it: download in sun yellow close
-/// to the button, upload in plasma blue further out, both reaching further as more flows. A failed
+/// its edge. While connected, the traffic is the sun's light round it: download in mint close
+/// to the button, upload in violet further out, both reaching further as more flows. A failed
 /// connection shows a weak signal and an error badge, whose place [errorBadgeRect] gives.
 ///
 /// Nothing in it is blurred while it is drawn: the light, the button's shadow and its bevel are
@@ -193,16 +193,16 @@ void _paintLook(_Ctx x) {
 void _barsWave(_Ctx x, {bool backwards = false}) {
   if (!x.p.drawLogo) return;
   final color = _alpha(x.col, x.p.logoOpacity);
-  double rank(int part) => backwards ? _HiLogo.rank.last - _HiLogo.rank[part] : _HiLogo.rank[part];
+  double rank(int part) => backwards ? _SabixMark.rank.last - _SabixMark.rank[part] : _SabixMark.rank[part];
   final shade = [for (var i = 0; i < 4; i++) _alpha(color, .4 + .6 * _bump((x.f.time - rank(i) * .3) % 1.6))];
   x.logoSpace((c) {
-    // the H stays one piece: its crossbar fades from the short bar's shade into the tall bar's
+    // the upper ribbon stays one piece: its fill fades from the short bar's shade into the tall bar's
     c.drawPath(
-      _HiLogo.h,
+      _SabixMark.h,
       Paint()..shader = ui.Gradient.linear(const Offset(16.84, 0), const Offset(23.58, 0), [shade[0], shade[1]]),
     );
-    c.drawPath(_HiLogo.stem, Paint()..color = shade[2]);
-    c.drawPath(_HiLogo.dot, Paint()..color = shade[3]);
+    c.drawPath(_SabixMark.stem, Paint()..color = shade[2]);
+    c.drawPath(_SabixMark.dot, Paint()..color = shade[3]);
   });
 }
 
@@ -229,7 +229,7 @@ void _radar(_Ctx x) {
     );
   }
   // the logo keeps the button's white under it, so a faded bar doesn't show the radar through it
-  if (x.p.drawLogo) x.logoSpace((c) => c.drawPath(_HiLogo.all, Paint()..color = Colors.white));
+  if (x.p.drawLogo) x.logoSpace((c) => c.drawPath(_SabixMark.all, Paint()..color = Colors.white));
 }
 
 /// The signal steps down to weak, then keeps searching, and the error badge breathes, sending out a
@@ -243,7 +243,7 @@ void _error(_Ctx x) {
     ghost: _alpha(x.col, .16),
     dx: _shake(s),
     parts: _each((i) {
-      final bar = _HiLogo.bar[i];
+      final bar = _SabixMark.bar[i];
       final drop = _easeOut((s - (2 - bar) * .1) / .55);
       final waver = .06 * math.sin(x.f.time * 2.3 + bar * 1.7) * settled;
       final fade = bar == 2 ? 1 - .4 * _osc(x.f.time, 2.2) * settled : 1.0;
@@ -272,10 +272,10 @@ void _connected(_Ctx x) {
   final appear = _easeOut((s - .6) / 1.4);
   final down = t.down * appear;
   final up = t.up * appear;
-  final downColor = x.p.dark ? const Color(0xFFFFB020) : const Color(0xFFF59E0B);
-  final upColor = x.p.dark ? const Color(0xFF3F7BFF) : const Color(0xFF2563EB);
+  final downColor = x.p.dark ? const Color(0xFF5EEAD4) : const Color(0xFF0F766E);
+  final upColor = x.p.dark ? const Color(0xFFA78BFA) : const Color(0xFF6D28D9);
 
-  // The sun's yellow close to the button, the plasma's blue further out and on top, so the two
+  // Mint close to the button, violet further out and on top, so the two
   // stay apart instead of mixing to grey. Standing still it is the same light, at the moment its
   // clock stopped: two plain glows in its place looked like another button
   _Light.sun.paint(x, downColor, down, additive: x.p.dark);
@@ -298,7 +298,7 @@ void _connected(_Ctx x) {
       _Part(scaleY: h[0] * breathe(0)),
       _Part(scaleY: h[1] * breathe(1)),
       _Part(scaleY: stem),
-      _Part(dy: (1 - stem) * 35.2 - 1.2 * motion * _osc(x.f.time, 2.6)),
+      _Part(dy: (1 - stem) * 12 - 1.2 * motion * _osc(x.f.time, 2.6)),
     ],
   );
   x.star(x.toPx(const Offset(67, -2)), 6 * _bump((s - .5) / .9));
@@ -956,7 +956,13 @@ class _Ctx {
   Offset toPx(Offset logoPoint) => logoRect.topLeft + logoPoint * k;
 
   /// The white button with its soft shadow and bevel.
-  void disc() => _Body(center, r, p.dark).paint(c);
+  void disc() {
+    _Body(center, r, p.dark).paint(c);
+    // A pair of etched navigation rings. No extra animation or hit regions.
+    final ink = p.dark ? const Color(0xFFA78BFA) : const Color(0xFF5B21B6);
+    ring(r * .86, _alpha(ink, .23), .8);
+    ring(r * .78, _alpha(ink, .13), .65);
+  }
 
   void logo({List<_Part>? parts, Color? ghost, double dx = 0}) {
     if (!p.drawLogo) return;
@@ -1068,28 +1074,16 @@ Path _svgPath(String d) {
   return path;
 }
 
-abstract final class _HiLogo {
-  static final dot = _svgPath(
-    'M47.1582 14.4283C47.1582 13.8368 47.4684 13.2886 47.9757 12.9842L61.4494 4.89891C62.5721 4.22529 64.0003 '
-    '5.03389 64.0003 6.34306V20.2103C64.0003 21.1405 63.2461 21.8945 62.3161 21.8945H48.8424C47.9124 21.8945 '
-    '47.1582 21.1405 47.1582 20.2103V14.4283Z',
-  );
-
+abstract final class _SabixMark {
+  // Two counter-curving ribbons form the SABIx mark. The spark is a separate layer.
+  static final dot = _svgPath('M32 25 L38 32 L32 39 L26 32 Z');
   static final h = _svgPath(
-    'M24.3966 26.4593C23.8893 26.7637 23.5789 27.3118 23.5789 27.9034V43.7921L23.5789 45.4751L23.5789 45.4763L23.5789 '
-    '48.0001C23.5789 48.9301 22.8249 49.6001 21.8947 49.6001H18.5263C17.5962 49.6001 16.8421 48.9301 16.8421 48.0001V '
-    '45.4751V34.976C16.8421 33.6669 15.4139 32.8583 14.2913 33.5319L0.817607 41.6171C0.310362 41.9216 0 42.4696 0 '
-    '43.0615V60.6342C0 61.5642 0.754048 62.3184 1.68421 62.3184H15.1579C16.0881 62.3184 16.8421 61.5642 16.8421 '
-    '60.6342V58.9488V56.8314C16.8421 55.9011 17.5962 55.3376 18.5263 55.3376H21.8947C22.8249 55.3376 23.5789 55.9011 '
-    '23.5789 56.8314V58.9488L23.5789 60.6342C23.5789 61.5642 24.333 62.3184 25.2632 62.3184H38.7368C39.6669 62.3184 '
-    '40.4211 61.5642 40.4211 60.6342V45.4763V43.7921V19.8182C40.4211 18.509 38.9928 17.7004 37.8701 18.374L24.3966 '
-    '26.4593Z',
-  )..fillType = PathFillType.evenOdd;
-
+    'M50 12 C41 2 23 2 14 13 C3 27 15 42 27 37 '
+    'C17 34 15 24 23 17 C30 11 41 10 50 12 Z',
+  );
   static final stem = _svgPath(
-    'M47.1592 28.7999V60.7999C47.1592 61.6836 47.9132 62.3999 48.8434 62.3999H62.3171C63.2472 62.3999 64.0013 61.6836 '
-    '64.0013 60.7999V28.7999C64.0013 27.9162 63.2472 27.1999 62.3171 27.1999H48.8434C47.9132 27.1999 47.1592 27.9162 '
-    '47.1592 28.7999Z',
+    'M14 52 C23 62 41 62 50 51 C61 37 49 22 37 27 '
+    'C47 30 49 40 41 47 C34 53 23 54 14 52 Z',
   );
 
   static final all = Path.combine(PathOperation.union, Path.combine(PathOperation.union, h, stem), dot);
@@ -1098,13 +1092,13 @@ abstract final class _HiLogo {
 
   static Rect clipOf(int part) => switch (part) {
     0 => const Rect.fromLTRB(-2, -2, 23.58, 66),
-    1 => const Rect.fromLTRB(23.58, -2, 42, 66),
+    1 => const Rect.fromLTRB(23.58, -2, 66, 66),
     _ => const Rect.fromLTRB(-2, -2, 66, 66),
   };
 
-  static const tops = [32.9, 18.2, 27.2, 4.2];
-  static const bottoms = [62.32, 62.32, 62.4, 21.9];
-  static const centersX = [8.4, 32.0, 55.6, 55.6];
+  static const tops = [4.0, 4.0, 25.0, 25.0];
+  static const bottoms = [39.0, 39.0, 60.0, 39.0];
+  static const centersX = [14.0, 32.0, 43.0, 32.0];
 
   /// The signal bar each part belongs to: the stem and the dot are the third.
   static const bar = [0, 1, 2, 2];
@@ -1132,18 +1126,18 @@ void _paintLogo(Canvas c, Rect r, {required Color color, List<_Part>? parts, Col
   c.scale(r.width / 64);
   for (var i = 0; i < 4; i++) {
     final s = parts?[i] ?? const _Part();
-    final top = _HiLogo.tops[i];
-    final bottom = _HiLogo.bottoms[i];
+    final top = _SabixMark.tops[i];
+    final bottom = _SabixMark.bottoms[i];
     c.save();
     c.translate(0, s.dy);
     if (s.scaleY != 1) {
-      c.translate(_HiLogo.centersX[i], bottom);
+      c.translate(_SabixMark.centersX[i], bottom);
       c.scale(1, s.scaleY);
-      c.translate(-_HiLogo.centersX[i], -bottom);
+      c.translate(-_SabixMark.centersX[i], -bottom);
     }
-    // not antialiased, so the two halves of the H meet without a seam
-    c.clipRect(_HiLogo.clipOf(i), doAntiAlias: false);
-    final path = _HiLogo.pathOf(i);
+    // not antialiased, so the two halves of the upper ribbon meet without a seam
+    c.clipRect(_SabixMark.clipOf(i), doAntiAlias: false);
+    final path = _SabixMark.pathOf(i);
     if (ghost != null) c.drawPath(path, Paint()..color = ghost);
     if (s.fill > 0 && s.opacity > 0) {
       if (s.fill < 1) c.clipRect(Rect.fromLTRB(-2, bottom - s.fill * (bottom - top), 66, 66));

@@ -19,8 +19,17 @@ class AppTheme {
   }
 
   ThemeData darkTheme(ColorScheme? darkColorScheme) {
-    final ColorScheme scheme =
-        darkColorScheme ?? ColorScheme.fromSeed(seedColor: const Color(0xFF8B5CF6), brightness: Brightness.dark);
+    final ColorScheme scheme = darkColorScheme ??
+        ColorScheme.fromSeed(seedColor: const Color(0xFF8B5CF6), brightness: Brightness.dark).copyWith(
+          surface: const Color(0xFF0C0F22),
+          surfaceContainerLow: const Color(0xFF12162C),
+          surfaceContainer: const Color(0xFF171C38),
+          surfaceContainerHigh: const Color(0xFF212647),
+          onSurface: const Color(0xFFF8FAFF),
+          onSurfaceVariant: const Color(0xFFC7CDEF),
+          secondary: const Color(0xFF5EEAD4),
+          onSecondary: const Color(0xFF062D29),
+        );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,

@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   build-release:
+    if: github.repository == 'hiddify/hiddify-app'
     uses: ./.github/workflows/build.yml
     secrets: inherit
     # Same grant as ci.yml: with a narrowed block GITHUB_TOKEN got "Resource not accessible by

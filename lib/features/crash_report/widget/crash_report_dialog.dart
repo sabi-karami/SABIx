@@ -1372,7 +1372,7 @@ Uri githubIssueUrl({
       if (text.isNotEmpty)
         'problem': text.length > 1500 ? '${text.substring(0, 1500)}…' : text
       else if (crash != null)
-        'problem': 'Hiddify crashed: ${crash.headline}',
+        'problem': '${Constants.appName} crashed: ${crash.headline}',
       if (crash != null) 'logs': crash.text,
       'additional': 'Diagnostics report:\n',
     },
