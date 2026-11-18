@@ -101,17 +101,19 @@ void main() {
     }
   });
 
-  test('the download lights the button in yellow, close to it', () async {
-    final (r, _, b) = _round(await _pixels(_button(down: 1)), 8);
-    expect(r, greaterThan(_background.r * 255 + 40));
-    expect(r, greaterThan(b + 40));
+  test('the download lights the button in mint, close to it', () async {
+    final (r, g, b) = _round(await _pixels(_button(down: 1)), 8);
+    expect(g, greaterThan(_background.g * 255 + 40));
+    expect(g, greaterThan(r + 40));
+    expect(b, greaterThan(r + 30));
   });
 
-  test('the upload lights it in blue, further out', () async {
+  test('the upload lights it in violet, further out', () async {
     final pixels = await _pixels(_button(up: 1));
-    final (r, _, b) = _round(pixels, 30);
+    final (r, g, b) = _round(pixels, 30);
     expect(b, greaterThan(_background.b * 255 + 40));
-    expect(b, greaterThan(r + 30));
+    expect(b, greaterThan(g + 25));
+    expect(r, greaterThan(g + 5));
     // a hollow ring: dimmer next to the button than further out
     expect(_round(pixels, 3).$3, lessThan(b));
   });
@@ -120,9 +122,9 @@ void main() {
     final none = _round(await _pixels(_button()), 30);
     expect(none.$1, closeTo(_background.r * 255, 2));
     expect(none.$3, closeTo(_background.b * 255, 2));
-    final low = _round(await _pixels(_button(down: .3)), 30).$1;
-    final full = _round(await _pixels(_button(down: 1)), 30).$1;
-    expect(low, closeTo(_background.r * 255, 3));
+    final low = _round(await _pixels(_button(down: .3)), 30).$2;
+    final full = _round(await _pixels(_button(down: 1)), 30).$2;
+    expect(low, closeTo(_background.g * 255, 3));
     expect(full, greaterThan(low + 10));
   });
 
