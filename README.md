@@ -32,3 +32,6 @@ This project is non-commercial, contains no ads, and all source changes are publ
 - New application id `com.sabix.app` (installs alongside the original app)
 - In-app links (GitHub, releases, issues, update checker) point to this repository
 - No functional/core changes — connection engine and protocols are untouched upstream code
+
+### Orbit Android test branch
+The orbit layer is visual only. All original connection callbacks, status, service code and the upstream license remain unchanged. Test builds are not releases, use a debug signature, require working VPN profiles, and have not been device-validated.

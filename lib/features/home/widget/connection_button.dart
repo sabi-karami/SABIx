@@ -1,3 +1,4 @@
+import 'sabix_orbit_painter.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -464,6 +465,22 @@ class _ConnectionButton extends HookWidget {
                                   ),
                                 );
                               },
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Brand-only overlay: existing health badges and input remain above this layer.
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: ExcludeSemantics(
+                            child: RepaintBoundary(
+                              child: CustomPaint(
+                                painter: SabixOrbitPainter(
+                                  const AlwaysStoppedAnimation(0.16),
+                                  buttonColor,
+                                  theme.colorScheme.outline,
+                                ),
+                              ),
                             ),
                           ),
                         ),
