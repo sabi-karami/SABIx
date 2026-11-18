@@ -32,4 +32,4 @@ This project is non-commercial, contains no ads, and all source changes are publ
 - Rebranded to **SABIx**: new name, launcher icon, splash screen, in-app logo and color theme (violet `#8B5CF6` / aqua `#22D3EE` on deep-space `#0C0F22`)
 - New application id `com.sabix.app` (installs alongside the original app)
 - In-app links (GitHub, releases, issues, update checker) point to this repository
-- No functional/core changes — connection engine and protocols are untouched upstream code
+- Simplified the home screen around its central connection control; profiles and advanced controls remain accessible. The connection engine and protocols are unchanged.
