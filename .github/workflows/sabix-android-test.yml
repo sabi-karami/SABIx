@@ -1,6 +1,12 @@
 name: SABIx Android test APK
 on:
   workflow_dispatch:
+  push:
+    branches: [sabix-orbit-android]
+    paths:
+      - .github/workflows/sabix-android-test.yml
+      - lib/features/home/widget/connection_button.dart
+      - lib/features/home/widget/sabix_orbit_painter.dart
 permissions:
   contents: read
 concurrency:
